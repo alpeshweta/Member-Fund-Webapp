@@ -1,0 +1,59 @@
+import { createContext, useContext, useEffect, useState } from 'react'
+import type { MySuperProduct, PerformanceMeta, PerformanceData } from '../types/performance'
+
+interface PerformanceDataContextValue {
+  mysuper: MySuperProduct[]
+  meta: PerformanceMeta | null
+  loading: boolean
+  error: string | null
+}
+
+const PerformanceDataContext = createContext<PerformanceDataContextValue>({
+  mysuper: [],
+  meta: null,
+  loading: true,
+  error: null,
+})
+
+export function DataProvider({ children }: { children: React.ReactNode }) {
+  const [mysuper, setMysuper] = useState<MySuperProduct[]>([])
+  const [meta, setMeta] = useState<PerformanceMeta | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/performance-data.json')
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        return res.json() as Promise<PerformanceData>
+      })
+      .then((data) => {
+        if (!Array.isArray(data.mysuper_products) || data.mysuper_products.length === 0) {
+          throw new Error('Fund data is currently unavailable.')
+        }
+        setMysuper(data.mysuper_products)
+        setMeta({
+          last_updated: data.last_updated,
+          source_years_mysuper: data.source_years_mysuper,
+          source_years_tdp: data.source_years_tdp,
+          total_mysuper_products: data.total_mysuper_products,
+          total_tdp_options: data.total_tdp_options,
+        })
+      })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Unknown error'
+        setError(message)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  return (
+    <PerformanceDataContext.Provider value={{ mysuper, meta, loading, error }}>
+      {children}
+    </PerformanceDataContext.Provider>
+  )
+}
+
+export function usePerformanceDataContext() {
+  return useContext(PerformanceDataContext)
+}

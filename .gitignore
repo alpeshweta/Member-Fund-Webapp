@@ -1,0 +1,17 @@
+node_modules
+dist
+.env
+.env.local
+
+# Node.js binaries (if accidentally placed in project root)
+node.exe
+npm
+npm.cmd
+npm.ps1
+npx
+npx.cmd
+npx.ps1
+corepack
+corepack.cmd
+nodevars.bat
+install_tools.bat
