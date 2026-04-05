@@ -1,5 +1,5 @@
 export type RagColour = 'Green' | 'Amber' | 'Red' | null
-export type PassFail = 'Pass' | 'Fail' | null
+export type PassFail = 'Pass' | 'Fail' | 'Unknown' | null
 
 export interface MySuperProduct {
   product_name: string
