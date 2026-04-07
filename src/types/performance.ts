@@ -1,6 +1,17 @@
 export type RagColour = 'Green' | 'Amber' | 'Red' | null
 export type PassFail = 'Pass' | 'Fail' | 'Unknown' | null
 
+/** Shared metric fields present on both MySuperProduct and TdpProduct. */
+export interface FundMetrics {
+  current_metrics_available: boolean
+  nir_10yr: number | null
+  nir_rag: RagColour
+  fees_50k: number | null
+  fees_50k_rag: RagColour
+  fees_100k: number | null
+  fees_100k_rag: RagColour
+}
+
 export interface MySuperProduct {
   product_name: string
   current_metrics_available: boolean

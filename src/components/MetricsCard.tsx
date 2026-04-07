@@ -1,4 +1,4 @@
-import type { MySuperProduct } from '../types/performance'
+import type { FundMetrics } from '../types/performance'
 import type { RagColour } from '../types/performance'
 import { RagIndicator } from './RagIndicator'
 import { formatPercent } from '../utils/formatters'
@@ -26,7 +26,7 @@ function MetricRow({ label, value, rag }: MetricRowProps) {
 }
 
 interface Props {
-  fund: MySuperProduct
+  fund: FundMetrics
 }
 
 export function MetricsCard({ fund }: Props) {
