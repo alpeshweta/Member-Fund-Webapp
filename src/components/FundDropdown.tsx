@@ -27,13 +27,15 @@ export function FundDropdown({
   return (
     <div
       className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg"
-      role="listbox"
-      id={id}
-      aria-label="MySuper fund results"
     >
       {hasResults ? (
         <>
-          <ul className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+          <ul
+            id={id}
+            role="listbox"
+            aria-label="Matching MySuper funds"
+            className="max-h-72 overflow-y-auto py-1"
+          >
             {results.map((result, index) => (
               <FundDropdownItem
                 key={result.item.product_name}

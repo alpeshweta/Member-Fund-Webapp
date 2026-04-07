@@ -1,4 +1,4 @@
-import { Link, Navigate, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { MySuperProduct } from '../types/performance'
 import { usePerformanceData } from '../hooks/usePerformanceData'
 import { computeRiskSignal } from '../utils/riskSignal'
@@ -10,11 +10,25 @@ import { HistoryTimeline } from '../components/HistoryTimeline'
 
 export function DashboardPage() {
   const { state } = useLocation()
+  const navigate = useNavigate()
   const fund = (state as { fund?: MySuperProduct } | null)?.fund
   const { meta } = usePerformanceData()
 
   if (!fund) {
-    return <Navigate to="/" replace />
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+        <div className="text-center">
+          <p className="text-slate-600 text-sm mb-4">No fund selected.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="px-6 py-2 min-h-[44px] bg-slate-800 text-white text-sm rounded-md hover:bg-slate-700"
+          >
+            ← Back to search
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // Computed values — order-independent year sorting
@@ -34,7 +48,7 @@ export function DashboardPage() {
           to="/"
           className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 min-h-[44px]"
         >
-          <span aria-hidden="true">←</span> Search again
+          ← Back to search
         </Link>
 
         {/* Fund heading */}
