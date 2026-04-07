@@ -1,5 +1,5 @@
 import Fuse from 'fuse.js'
-import type { MySuperProduct } from '../types/performance'
+import type { MySuperProduct, TdpProduct } from '../types/performance'
 
 const FUSE_OPTIONS: Fuse.IFuseOptions<MySuperProduct> = {
   keys: ['product_name'],
@@ -11,6 +11,19 @@ const FUSE_OPTIONS: Fuse.IFuseOptions<MySuperProduct> = {
 
 export function createFuseInstance(products: MySuperProduct[]) {
   return new Fuse(products, FUSE_OPTIONS)
+}
+
+export function createTdpFuseInstance(products: TdpProduct[]): Fuse<TdpProduct> {
+  return new Fuse(products, {
+    keys: [
+      { name: 'investment_option_name', weight: 3 },
+      { name: 'investment_menu_name', weight: 2 },
+      { name: 'product_name', weight: 1 },
+    ],
+    threshold: 0.4,
+    includeMatches: true,
+    minMatchCharLength: 2,
+  })
 }
 
 export type HighlightSegment = { text: string; highlight: boolean }
