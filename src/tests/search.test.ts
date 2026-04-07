@@ -51,4 +51,28 @@ describe('highlightMatches', () => {
       { text: 'Super', highlight: true },
     ])
   })
+
+  it('produces two separate highlighted segments for non-adjacent ranges', () => {
+    expect(highlightMatches('AustralianSuper', [[0, 2], [10, 12]])).toEqual([
+      { text: 'Aus', highlight: true },
+      { text: 'tralian', highlight: false },
+      { text: 'Sup', highlight: true },
+      { text: 'er', highlight: false },
+    ])
+  })
+
+  it('handles unsorted index input', () => {
+    expect(highlightMatches('AustralianSuper', [[10, 12], [0, 2]])).toEqual([
+      { text: 'Aus', highlight: true },
+      { text: 'tralian', highlight: false },
+      { text: 'Sup', highlight: true },
+      { text: 'er', highlight: false },
+    ])
+  })
+
+  it('handles empty string input', () => {
+    expect(highlightMatches('', [])).toEqual([
+      { text: '', highlight: false },
+    ])
+  })
 })
