@@ -4,32 +4,50 @@ import { useNavigate } from 'react-router-dom'
 import type Fuse from 'fuse.js'
 
 import { usePerformanceData } from '../hooks/usePerformanceData'
-import { createFuseInstance } from '../utils/search'
-import type { MySuperProduct } from '../types/performance'
+import { createFuseInstance, createTdpFuseInstance } from '../utils/search'
+import type { MySuperProduct, TdpProduct } from '../types/performance'
 
 import { DataFreshnessLabel } from '../components/DataFreshnessLabel'
 import { FundSearchInput } from '../components/FundSearchInput'
 import { FundDropdown } from '../components/FundDropdown'
 import { SelectedFund } from '../components/SelectedFund'
+import { TdpDropdown } from '../components/TdpDropdown'
+import { TdpSelectedFund } from '../components/TdpSelectedFund'
 
 const LISTBOX_ID = 'fund-search-listbox'
+const TDP_LISTBOX_ID = 'tdp-fund-search-listbox'
+
+type Tab = 'mysuper' | 'tdp'
 
 export function SearchPage() {
   const navigate = useNavigate()
-  const { mysuper, meta, loading, error } = usePerformanceData()
+  const { mysuper, tdp, meta, loading, error } = usePerformanceData()
 
+  // --- Tab ---
+  const [activeTab, setActiveTab] = useState<Tab>('mysuper')
+
+  // --- MySuper search state ---
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Fuse.FuseResult<MySuperProduct>[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [isOpen, setIsOpen] = useState(false)
   const [selectedFund, setSelectedFund] = useState<MySuperProduct | null>(null)
 
+  // --- TDP search state ---
+  const [tdpQuery, setTdpQuery] = useState('')
+  const [tdpResults, setTdpResults] = useState<Fuse.FuseResult<TdpProduct>[]>([])
+  const [tdpActiveIndex, setTdpActiveIndex] = useState(-1)
+  const [tdpIsOpen, setTdpIsOpen] = useState(false)
+  const [tdpSelectedFund, setTdpSelectedFund] = useState<TdpProduct | null>(null)
+
   const inputRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const tdpContainerRef = useRef<HTMLDivElement>(null)
 
   const fuse = useMemo(() => createFuseInstance(mysuper), [mysuper])
+  const tdpFuse = useMemo(() => createTdpFuseInstance(tdp), [tdp])
 
-  // Run search when query changes
+  // MySuper search effect
   useEffect(() => {
     if (query.trim().length < 2) {
       setResults([])
@@ -37,13 +55,25 @@ export function SearchPage() {
       setActiveIndex(-1)
       return
     }
-    const found = fuse.search(query)
-    setResults(found)
+    setResults(fuse.search(query))
     setIsOpen(true)
     setActiveIndex(-1)
   }, [query, fuse])
 
-  // Close dropdown on click-outside
+  // TDP search effect
+  useEffect(() => {
+    if (tdpQuery.trim().length < 2) {
+      setTdpResults([])
+      setTdpIsOpen(false)
+      setTdpActiveIndex(-1)
+      return
+    }
+    setTdpResults(tdpFuse.search(tdpQuery, { limit: 15 }))
+    setTdpIsOpen(true)
+    setTdpActiveIndex(-1)
+  }, [tdpQuery, tdpFuse])
+
+  // Close MySuper dropdown on click-outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -54,6 +84,18 @@ export function SearchPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // Close TDP dropdown on click-outside
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (tdpContainerRef.current && !tdpContainerRef.current.contains(e.target as Node)) {
+        setTdpIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // --- MySuper callbacks ---
   const selectFund = useCallback((fund: MySuperProduct) => {
     setSelectedFund(fund)
     setQuery('')
@@ -64,7 +106,6 @@ export function SearchPage() {
 
   const clearSelection = useCallback(() => {
     setSelectedFund(null)
-    // Re-focus the input after clearing
     const input = inputRef.current?.querySelector('input')
     setTimeout(() => input?.focus(), 0)
   }, [])
@@ -79,13 +120,10 @@ export function SearchPage() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       if (!isOpen && e.key !== 'ArrowDown') return
-
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          if (!isOpen && results.length > 0) {
-            setIsOpen(true)
-          }
+          if (!isOpen && results.length > 0) setIsOpen(true)
           setActiveIndex((i) => Math.min(i + 1, results.length - 1))
           break
         case 'ArrowUp':
@@ -109,7 +147,60 @@ export function SearchPage() {
     [isOpen, results, activeIndex, selectFund],
   )
 
+  // --- TDP callbacks ---
+  const selectTdpFund = useCallback((fund: TdpProduct) => {
+    setTdpSelectedFund(fund)
+    setTdpQuery('')
+    setTdpResults([])
+    setTdpIsOpen(false)
+    setTdpActiveIndex(-1)
+  }, [])
+
+  const clearTdpSelection = useCallback(() => {
+    setTdpSelectedFund(null)
+    const input = tdpContainerRef.current?.querySelector('input')
+    setTimeout(() => input?.focus(), 0)
+  }, [])
+
+  const navigateToTdpDashboard = useCallback(() => {
+    if (!tdpSelectedFund) return
+    navigate('/fund/tdp/' + encodeURIComponent(tdpSelectedFund.investment_option_name), {
+      state: { fund: tdpSelectedFund },
+    })
+  }, [navigate, tdpSelectedFund])
+
+  const handleTdpKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (!tdpIsOpen && e.key !== 'ArrowDown') return
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault()
+          if (!tdpIsOpen && tdpResults.length > 0) setTdpIsOpen(true)
+          setTdpActiveIndex((i) => Math.min(i + 1, tdpResults.length - 1))
+          break
+        case 'ArrowUp':
+          e.preventDefault()
+          setTdpActiveIndex((i) => Math.max(i - 1, -1))
+          break
+        case 'Enter':
+          e.preventDefault()
+          if (tdpActiveIndex >= 0 && tdpResults[tdpActiveIndex]) {
+            selectTdpFund(tdpResults[tdpActiveIndex].item)
+          } else if (tdpResults.length === 1 && tdpResults[0]) {
+            selectTdpFund(tdpResults[0].item)
+          }
+          break
+        case 'Escape':
+          setTdpIsOpen(false)
+          setTdpActiveIndex(-1)
+          break
+      }
+    },
+    [tdpIsOpen, tdpResults, tdpActiveIndex, selectTdpFund],
+  )
+
   const activeItemId = activeIndex >= 0 ? `option-${activeIndex}` : null
+  const tdpActiveItemId = tdpActiveIndex >= 0 ? `tdp-option-${tdpActiveIndex}` : null
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -144,56 +235,143 @@ export function SearchPage() {
           </div>
         )}
 
-        {/* Search area */}
-        {!selectedFund ? (
-          <div ref={containerRef} className="relative">
-            <div ref={inputRef}>
-              <FundSearchInput
-                query={query}
-                isOpen={isOpen}
-                listboxId={LISTBOX_ID}
-                activeItemId={activeItemId}
-                disabled={loading || !!error}
-                onChange={setQuery}
-                onKeyDown={handleKeyDown}
-              />
+        {/* Tab bar */}
+        <div className="flex border-b border-slate-200 mb-4" role="tablist" aria-label="Fund type">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'mysuper'}
+            aria-controls="panel-mysuper"
+            id="tab-mysuper"
+            onClick={() => setActiveTab('mysuper')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'mysuper'
+                ? 'border-slate-800 text-slate-900'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            MySuper
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'tdp'}
+            aria-controls="panel-tdp"
+            id="tab-tdp"
+            onClick={() => setActiveTab('tdp')}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === 'tdp'
+                ? 'border-slate-800 text-slate-900'
+                : 'border-transparent text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            Choice (TDP)
+          </button>
+        </div>
+
+        {/* MySuper panel */}
+        <div
+          id="panel-mysuper"
+          role="tabpanel"
+          aria-labelledby="tab-mysuper"
+          hidden={activeTab !== 'mysuper'}
+        >
+          {!selectedFund ? (
+            <div ref={containerRef} className="relative">
+              <div ref={inputRef}>
+                <FundSearchInput
+                  query={query}
+                  isOpen={isOpen}
+                  listboxId={LISTBOX_ID}
+                  activeItemId={activeItemId}
+                  disabled={loading || !!error}
+                  onChange={setQuery}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+              {loading && (
+                <p className="mt-2 text-sm text-slate-400" aria-live="polite">
+                  Loading fund data…
+                </p>
+              )}
+              {isOpen && (
+                <FundDropdown
+                  id={LISTBOX_ID}
+                  results={results}
+                  activeIndex={activeIndex}
+                  query={query}
+                  totalProducts={meta?.total_mysuper_products ?? 127}
+                  onSelect={selectFund}
+                  onActiveIndexChange={setActiveIndex}
+                />
+              )}
             </div>
+          ) : (
+            <SelectedFund
+              fund={selectedFund}
+              onClear={clearSelection}
+              onNavigate={navigateToDashboard}
+            />
+          )}
+          {!loading && !error && !selectedFund && (
+            <p className="mt-3 text-xs text-slate-400">
+              Search across {meta?.total_mysuper_products ?? 127} MySuper products. Type at least 2
+              characters.
+            </p>
+          )}
+        </div>
 
-            {/* Loading indicator */}
-            {loading && (
-              <p className="mt-2 text-sm text-slate-400" aria-live="polite">
-                Loading fund data…
-              </p>
-            )}
-
-            {/* Dropdown */}
-            {isOpen && (
-              <FundDropdown
-                id={LISTBOX_ID}
-                results={results}
-                activeIndex={activeIndex}
-                query={query}
-                totalProducts={meta?.total_mysuper_products ?? 127}
-                onSelect={selectFund}
-                onActiveIndexChange={setActiveIndex}
+        {/* TDP panel */}
+        <div
+          id="panel-tdp"
+          role="tabpanel"
+          aria-labelledby="tab-tdp"
+          hidden={activeTab !== 'tdp'}
+        >
+          {!tdpSelectedFund ? (
+            <div ref={tdpContainerRef} className="relative">
+              <FundSearchInput
+                query={tdpQuery}
+                isOpen={tdpIsOpen}
+                listboxId={TDP_LISTBOX_ID}
+                activeItemId={tdpActiveItemId}
+                disabled={loading || !!error}
+                onChange={setTdpQuery}
+                onKeyDown={handleTdpKeyDown}
+                label="Search for your TDP investment option"
+                placeholder="Start typing your investment option or fund name…"
               />
-            )}
-          </div>
-        ) : (
-          <SelectedFund
-            fund={selectedFund}
-            onClear={clearSelection}
-            onNavigate={navigateToDashboard}
-          />
-        )}
-
-        {/* Helper text */}
-        {!loading && !error && !selectedFund && (
-          <p className="mt-3 text-xs text-slate-400">
-            Search across {meta?.total_mysuper_products ?? 127} MySuper products. Type at least 2
-            characters.
-          </p>
-        )}
+              {loading && (
+                <p className="mt-2 text-sm text-slate-400" aria-live="polite">
+                  Loading fund data…
+                </p>
+              )}
+              {tdpIsOpen && (
+                <TdpDropdown
+                  id={TDP_LISTBOX_ID}
+                  results={tdpResults}
+                  activeIndex={tdpActiveIndex}
+                  query={tdpQuery}
+                  totalProducts={tdp.length}
+                  onSelect={selectTdpFund}
+                  onActiveIndexChange={setTdpActiveIndex}
+                />
+              )}
+            </div>
+          ) : (
+            <TdpSelectedFund
+              fund={tdpSelectedFund}
+              onClear={clearTdpSelection}
+              onNavigate={navigateToTdpDashboard}
+            />
+          )}
+          {!loading && !error && !tdpSelectedFund && (
+            <p className="mt-3 text-xs text-slate-400">
+              Search across {tdp.length.toLocaleString()} TDP investment options. Type at least 2
+              characters.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   )

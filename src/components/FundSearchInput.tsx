@@ -8,6 +8,8 @@ interface Props {
   disabled: boolean
   onChange: (value: string) => void
   onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => void
+  label?: string
+  placeholder?: string
 }
 
 export function FundSearchInput({
@@ -18,11 +20,13 @@ export function FundSearchInput({
   disabled,
   onChange,
   onKeyDown,
+  label = 'Search for your MySuper fund',
+  placeholder = 'Start typing your super fund name…',
 }: Props) {
   return (
     <div className="relative">
       <label htmlFor="fund-search" className="sr-only">
-        Search for your MySuper fund
+        {label}
       </label>
       <input
         id="fund-search"
@@ -32,14 +36,14 @@ export function FundSearchInput({
         aria-controls={listboxId}
         aria-autocomplete="list"
         aria-activedescendant={activeItemId ?? undefined}
-        aria-label="Search for your MySuper fund"
+        aria-label={label}
         autoComplete="off"
         spellCheck={false}
         disabled={disabled}
         value={query}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
-        placeholder="Start typing your super fund name…"
+        placeholder={placeholder}
         className={`w-full min-h-[44px] px-4 py-2.5 text-sm text-slate-800 bg-white border border-slate-300 rounded-md shadow-sm
           placeholder:text-slate-400
           focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500
