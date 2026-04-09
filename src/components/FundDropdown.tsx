@@ -1,4 +1,4 @@
-import type Fuse from 'fuse.js'
+import Fuse from 'fuse.js'
 import type { MySuperProduct } from '../types/performance'
 import { FundDropdownItem } from './FundDropdownItem'
 

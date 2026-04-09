@@ -16,7 +16,7 @@ function getFieldIndices(
   fuseResult: Fuse.FuseResult<TdpProduct>,
   field: string
 ): readonly [number, number][] {
-  return fuseResult.matches?.find(m => m.key === field)?.indices ?? []
+  return fuseResult.matches?.find((m: Fuse.FuseResultMatch) => m.key === field)?.indices ?? []
 }
 
 export function TdpDropdownItem({ id, product, fuseResult, isActive, onSelect, onMouseEnter }: Props) {

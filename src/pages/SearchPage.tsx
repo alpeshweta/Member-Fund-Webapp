@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type Fuse from 'fuse.js'
+import Fuse from 'fuse.js'
 
 import { usePerformanceData } from '../hooks/usePerformanceData'
 import { createFuseInstance, createTdpFuseInstance } from '../utils/search'
