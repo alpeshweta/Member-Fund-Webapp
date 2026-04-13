@@ -1,22 +1,22 @@
 import type { MouseEvent } from 'react'
-import Fuse from 'fuse.js'
+import type { FuseResult, FuseResultMatch } from 'fuse.js'
 import type { TdpProduct } from '../types/performance'
 import { highlightMatches } from '../utils/search'
 
 interface Props {
   id: string
   product: TdpProduct
-  fuseResult: Fuse.FuseResult<TdpProduct>
+  fuseResult: FuseResult<TdpProduct>
   isActive: boolean
   onSelect: (product: TdpProduct) => void
   onMouseEnter: () => void
 }
 
 function getFieldIndices(
-  fuseResult: Fuse.FuseResult<TdpProduct>,
+  fuseResult: FuseResult<TdpProduct>,
   field: string
 ): readonly [number, number][] {
-  return fuseResult.matches?.find((m: Fuse.FuseResultMatch) => m.key === field)?.indices ?? []
+  return fuseResult.matches?.find((m: FuseResultMatch) => m.key === field)?.indices ?? []
 }
 
 export function TdpDropdownItem({ id, product, fuseResult, isActive, onSelect, onMouseEnter }: Props) {

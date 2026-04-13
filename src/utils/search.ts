@@ -1,7 +1,8 @@
 import Fuse from 'fuse.js'
+import type { IFuseOptions } from 'fuse.js'
 import type { MySuperProduct, TdpProduct } from '../types/performance'
 
-const FUSE_OPTIONS: Fuse.IFuseOptions<MySuperProduct> = {
+const FUSE_OPTIONS: IFuseOptions<MySuperProduct> = {
   keys: ['product_name'],
   threshold: 0.5,
   includeMatches: true,

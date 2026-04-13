@@ -1,10 +1,10 @@
-import Fuse from 'fuse.js'
+import type { FuseResult } from 'fuse.js'
 import type { TdpProduct } from '../types/performance'
 import { TdpDropdownItem } from './TdpDropdownItem'
 
 interface Props {
   id: string
-  results: Fuse.FuseResult<TdpProduct>[]
+  results: FuseResult<TdpProduct>[]
   activeIndex: number
   query: string
   totalProducts: number

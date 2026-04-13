@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Fuse from 'fuse.js'
+import type { FuseResult } from 'fuse.js'
 
 import { usePerformanceData } from '../hooks/usePerformanceData'
 import { createFuseInstance, createTdpFuseInstance } from '../utils/search'
@@ -28,14 +28,14 @@ export function SearchPage() {
 
   // --- MySuper search state ---
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<Fuse.FuseResult<MySuperProduct>[]>([])
+  const [results, setResults] = useState<FuseResult<MySuperProduct>[]>([])
   const [activeIndex, setActiveIndex] = useState(-1)
   const [isOpen, setIsOpen] = useState(false)
   const [selectedFund, setSelectedFund] = useState<MySuperProduct | null>(null)
 
   // --- TDP search state ---
   const [tdpQuery, setTdpQuery] = useState('')
-  const [tdpResults, setTdpResults] = useState<Fuse.FuseResult<TdpProduct>[]>([])
+  const [tdpResults, setTdpResults] = useState<FuseResult<TdpProduct>[]>([])
   const [tdpActiveIndex, setTdpActiveIndex] = useState(-1)
   const [tdpIsOpen, setTdpIsOpen] = useState(false)
   const [tdpSelectedFund, setTdpSelectedFund] = useState<TdpProduct | null>(null)

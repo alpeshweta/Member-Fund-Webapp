@@ -1,10 +1,10 @@
-import Fuse from 'fuse.js'
+import type { FuseResult } from 'fuse.js'
 import type { MySuperProduct } from '../types/performance'
 import { FundDropdownItem } from './FundDropdownItem'
 
 interface Props {
   id: string
-  results: Fuse.FuseResult<MySuperProduct>[]
+  results: FuseResult<MySuperProduct>[]
   activeIndex: number
   query: string
   totalProducts: number
