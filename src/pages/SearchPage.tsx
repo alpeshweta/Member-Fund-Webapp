@@ -4,18 +4,16 @@ import { useNavigate } from 'react-router-dom'
 import type { FuseResult } from 'fuse.js'
 
 import { usePerformanceData } from '../hooks/usePerformanceData'
-import { createFuseInstance, createTdpFuseInstance } from '../utils/search'
-import type { MySuperProduct, TdpProduct } from '../types/performance'
+import { createFuseInstance } from '../utils/search'
+import type { MySuperProduct } from '../types/performance'
 
 import { DataFreshnessLabel } from '../components/DataFreshnessLabel'
 import { FundSearchInput } from '../components/FundSearchInput'
 import { FundDropdown } from '../components/FundDropdown'
 import { SelectedFund } from '../components/SelectedFund'
-import { TdpDropdown } from '../components/TdpDropdown'
-import { TdpSelectedFund } from '../components/TdpSelectedFund'
+import { TdpDrilldown } from '../components/TdpDrilldown'
 
 const LISTBOX_ID = 'fund-search-listbox'
-const TDP_LISTBOX_ID = 'tdp-fund-search-listbox'
 
 type Tab = 'mysuper' | 'tdp'
 
@@ -33,19 +31,10 @@ export function SearchPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedFund, setSelectedFund] = useState<MySuperProduct | null>(null)
 
-  // --- TDP search state ---
-  const [tdpQuery, setTdpQuery] = useState('')
-  const [tdpResults, setTdpResults] = useState<FuseResult<TdpProduct>[]>([])
-  const [tdpActiveIndex, setTdpActiveIndex] = useState(-1)
-  const [tdpIsOpen, setTdpIsOpen] = useState(false)
-  const [tdpSelectedFund, setTdpSelectedFund] = useState<TdpProduct | null>(null)
-
   const inputRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const tdpContainerRef = useRef<HTMLDivElement>(null)
 
   const fuse = useMemo(() => createFuseInstance(mysuper), [mysuper])
-  const tdpFuse = useMemo(() => createTdpFuseInstance(tdp), [tdp])
 
   // MySuper search effect
   useEffect(() => {
@@ -60,35 +49,11 @@ export function SearchPage() {
     setActiveIndex(-1)
   }, [query, fuse])
 
-  // TDP search effect
-  useEffect(() => {
-    if (tdpQuery.trim().length < 2) {
-      setTdpResults([])
-      setTdpIsOpen(false)
-      setTdpActiveIndex(-1)
-      return
-    }
-    setTdpResults(tdpFuse.search(tdpQuery, { limit: 15 }))
-    setTdpIsOpen(true)
-    setTdpActiveIndex(-1)
-  }, [tdpQuery, tdpFuse])
-
   // Close MySuper dropdown on click-outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  // Close TDP dropdown on click-outside
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (tdpContainerRef.current && !tdpContainerRef.current.contains(e.target as Node)) {
-        setTdpIsOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
@@ -147,60 +112,7 @@ export function SearchPage() {
     [isOpen, results, activeIndex, selectFund],
   )
 
-  // --- TDP callbacks ---
-  const selectTdpFund = useCallback((fund: TdpProduct) => {
-    setTdpSelectedFund(fund)
-    setTdpQuery('')
-    setTdpResults([])
-    setTdpIsOpen(false)
-    setTdpActiveIndex(-1)
-  }, [])
-
-  const clearTdpSelection = useCallback(() => {
-    setTdpSelectedFund(null)
-    const input = tdpContainerRef.current?.querySelector('input')
-    setTimeout(() => input?.focus(), 0)
-  }, [])
-
-  const navigateToTdpDashboard = useCallback(() => {
-    if (!tdpSelectedFund) return
-    navigate('/fund/tdp/' + encodeURIComponent(tdpSelectedFund.investment_option_name), {
-      state: { fund: tdpSelectedFund },
-    })
-  }, [navigate, tdpSelectedFund])
-
-  const handleTdpKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (!tdpIsOpen && e.key !== 'ArrowDown') return
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault()
-          if (!tdpIsOpen && tdpResults.length > 0) setTdpIsOpen(true)
-          setTdpActiveIndex((i) => Math.min(i + 1, tdpResults.length - 1))
-          break
-        case 'ArrowUp':
-          e.preventDefault()
-          setTdpActiveIndex((i) => Math.max(i - 1, -1))
-          break
-        case 'Enter':
-          e.preventDefault()
-          if (tdpActiveIndex >= 0 && tdpResults[tdpActiveIndex]) {
-            selectTdpFund(tdpResults[tdpActiveIndex].item)
-          } else if (tdpResults.length === 1 && tdpResults[0]) {
-            selectTdpFund(tdpResults[0].item)
-          }
-          break
-        case 'Escape':
-          setTdpIsOpen(false)
-          setTdpActiveIndex(-1)
-          break
-      }
-    },
-    [tdpIsOpen, tdpResults, tdpActiveIndex, selectTdpFund],
-  )
-
   const activeItemId = activeIndex >= 0 ? `option-${activeIndex}` : null
-  const tdpActiveItemId = tdpActiveIndex >= 0 ? `tdp-option-${tdpActiveIndex}` : null
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -328,49 +240,7 @@ export function SearchPage() {
           aria-labelledby="tab-tdp"
           hidden={activeTab !== 'tdp'}
         >
-          {!tdpSelectedFund ? (
-            <div ref={tdpContainerRef} className="relative">
-              <FundSearchInput
-                query={tdpQuery}
-                isOpen={tdpIsOpen}
-                listboxId={TDP_LISTBOX_ID}
-                activeItemId={tdpActiveItemId}
-                disabled={loading || !!error}
-                onChange={setTdpQuery}
-                onKeyDown={handleTdpKeyDown}
-                label="Search for your TDP investment option"
-                placeholder="Start typing your investment option or fund name…"
-              />
-              {loading && (
-                <p className="mt-2 text-sm text-slate-400" aria-live="polite">
-                  Loading fund data…
-                </p>
-              )}
-              {tdpIsOpen && (
-                <TdpDropdown
-                  id={TDP_LISTBOX_ID}
-                  results={tdpResults}
-                  activeIndex={tdpActiveIndex}
-                  query={tdpQuery}
-                  totalProducts={tdp.length}
-                  onSelect={selectTdpFund}
-                  onActiveIndexChange={setTdpActiveIndex}
-                />
-              )}
-            </div>
-          ) : (
-            <TdpSelectedFund
-              fund={tdpSelectedFund}
-              onClear={clearTdpSelection}
-              onNavigate={navigateToTdpDashboard}
-            />
-          )}
-          {!loading && !error && !tdpSelectedFund && (
-            <p className="mt-3 text-xs text-slate-400">
-              Search across {tdp.length.toLocaleString()} TDP investment options. Type at least 2
-              characters.
-            </p>
-          )}
+          <TdpDrilldown tdp={tdp} loading={loading} />
         </div>
       </div>
     </div>
