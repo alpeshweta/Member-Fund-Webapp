@@ -2,6 +2,8 @@
 
 A web application that lets Australian superannuation members look up their fund's APRA annual performance test status — Pass, Fail, or Unknown — without navigating APRA's Excel-based website.
 
+Data Extracted through https://github.com/alpeshweta/Member-Performance-Data-Extraction
+
 **Live features:** MySuper fund search, TDP (Choice) fund search, performance dashboard with history and risk signal.
 
 ---
